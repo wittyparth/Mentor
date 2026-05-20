@@ -35,14 +35,27 @@ async def clarify(
         )
 
 
-@router.post("/submit", response_model=ProjectPublic)
+@router.post("/submit")
 async def submit(
     *,
     session: SessionDep,
     current_user: CurrentUser,
     interview_data: InterviewSubmitInput,
-) -> ProjectPublic:
+) -> dict:
     project = await submit_interview(
         session=session, user_id=current_user.id, interview_data=interview_data
     )
-    return ProjectPublic.model_validate(project)
+
+    from app.repositories.job_repo import create_job
+    job = await create_job(
+        session=session,
+        project_id=project.id,
+        job_type="research_pipeline",
+    )
+
+    return {
+        "project_id": str(project.id),
+        "job_id": str(job.id),
+        "status": project.status,
+        "message": "Interview submitted. Research pipeline starting.",
+    }

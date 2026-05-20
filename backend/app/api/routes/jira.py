@@ -72,13 +72,13 @@ async def push_to_jira(
     current_user: CurrentUser,
     push_data: JiraPushInput,
 ) -> JiraPushResult:
-    from app.repositories.project_repo import get_project_by_id
+    from app.repositories.project_repo import update_project, get_project_by_id
+    from app.repositories.job_repo import create_job
 
     project = await get_project_by_id(session=session, project_id=project_id)
     if not project or project.user_id != current_user.id:
         raise HTTPException(status_code=404, detail="Project not found")
 
-    from app.repositories.project_repo import update_project
     await update_project(
         session=session,
         project=project,
@@ -88,7 +88,13 @@ async def push_to_jira(
         },
     )
 
+    job = await create_job(
+        session=session,
+        project_id=project_id,
+        job_type="linear_push",
+    )
+
     return JiraPushResult(
-        job_id=str(project_id),
-        message="Push job will be implemented in the next phase",
+        job_id=str(job.id),
+        message="Push job enqueued. Check SSE for progress.",
     )

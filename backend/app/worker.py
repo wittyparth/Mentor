@@ -1,4 +1,3 @@
-from arq import cron
 from arq.connections import RedisSettings
 
 from app.core.config import settings
@@ -18,8 +17,18 @@ async def on_shutdown(ctx):
     await close_redis_pool()
 
 
+async def research_pipeline_task(ctx, project_id: str):
+    from app.jobs.research_job import research_pipeline_task as _research
+    return await _research(ctx, project_id)
+
+
+async def linear_push_task(ctx, project_id: str):
+    from app.jobs.linear_push_job import linear_push_task as _push
+    return await _push(ctx, project_id)
+
+
 class WorkerSettings:
-    functions = []
+    functions = [research_pipeline_task, linear_push_task]
     cron_jobs = []
     redis_settings = RedisSettings.from_dsn(settings.REDIS_URL)
     on_startup = on_startup
