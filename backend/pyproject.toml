@@ -1,8 +1,8 @@
 [project]
 name = "app"
 version = "0.1.0"
-description = ""
-requires-python = ">=3.10,<4.0"
+description = "DevMentor — AI-Powered Project Mentor"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "fastapi[standard]<1.0.0,>=0.114.2",
     "python-multipart<1.0.0,>=0.0.7",
@@ -13,19 +13,27 @@ dependencies = [
     "jinja2<4.0.0,>=3.1.4",
     "alembic<2.0.0,>=1.12.1",
     "httpx<1.0.0,>=0.25.1",
-    "psycopg[binary]<4.0.0,>=3.1.13",
     "sqlmodel<1.0.0,>=0.0.21",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29.0",
     "pydantic-settings<3.0.0,>=2.2.1",
     "sentry-sdk[fastapi]>=2.0.0,<3.0.0",
-    "pyjwt<3.0.0,>=2.8.0",
+    "python-jose[cryptography]<4.0.0,>=3.3.0",
     "pwdlib[argon2,bcrypt]>=0.3.0",
+    "cryptography>=43.0.0",
+    "redis[asyncio]>=5.0.0",
+    "arq>=0.26.0",
+    "sse-starlette>=2.0.0",
+    "python-dateutil>=2.8.0",
 ]
 
 [dependency-groups]
 dev = [
     "pytest<8.0.0,>=7.4.3",
+    "pytest-asyncio>=0.23.0",
+    "httpx<1.0.0,>=0.25.1",
+    "pytest-mock>=3.12.0",
     "mypy<2.0.0,>=1.8.0",
-    "ty>=0.0.25",
     "ruff<1.0.0,>=0.2.2",
     "prek>=0.2.24,<1.0.0",
     "coverage<8.0.0,>=7.4.3",
@@ -40,30 +48,29 @@ strict = true
 exclude = ["venv", ".venv", "alembic"]
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py311"
 exclude = ["alembic"]
 
 [tool.ruff.lint]
 select = [
-    "E",  # pycodestyle errors
-    "W",  # pycodestyle warnings
-    "F",  # pyflakes
-    "I",  # isort
-    "B",  # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "UP",  # pyupgrade
-    "ARG001", # unused arguments in functions
-    "T201",   # print statements are not allowed
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "C4",
+    "UP",
+    "ARG001",
+    "T201",
 ]
 ignore = [
-    "E501",  # line too long, handled by black
-    "B008",  # do not perform function calls in argument defaults
-    "W191",  # indentation contains tabs
-    "B904",  # Allow raising exceptions without from e, for HTTPException
+    "E501",
+    "B008",
+    "W191",
+    "B904",
 ]
 
 [tool.ruff.lint.pyupgrade]
-# Preserve types, even if a file imports `from __future__ import annotations`.
 keep-runtime-typing = true
 
 [tool.coverage.run]
@@ -77,5 +84,6 @@ sort = "-Cover"
 [tool.coverage.html]
 show_contexts = true
 
-[tool.ty.terminal]
-error-on-warning = true
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

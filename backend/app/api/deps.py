@@ -1,44 +1,53 @@
-from collections.abc import Generator
+import uuid
+from collections.abc import AsyncGenerator
 from typing import Annotated
 
-import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jwt.exceptions import InvalidTokenError
-from pydantic import ValidationError
-from sqlmodel import Session
+from jose import JWTError, jwt
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from redis.asyncio import Redis
 
 from app.core import security
 from app.core.config import settings
-from app.core.db import engine
-from app.models import TokenPayload, User
+from app.core.database import AsyncSessionLocal
+from app.core.redis import get_redis_pool
+from app.models.user import User
+from app.schemas.user import TokenPayload
+from app.repositories import user_repo
 
 reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
 )
 
 
-def get_db() -> Generator[Session, None, None]:
-    with Session(engine) as session:
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
         yield session
 
 
-SessionDep = Annotated[Session, Depends(get_db)]
+async def get_redis() -> Redis:
+    return await get_redis_pool()
+
+
+SessionDep = Annotated[AsyncSession, Depends(get_db)]
+RedisDep = Annotated[Redis, Depends(get_redis)]
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
-def get_current_user(session: SessionDep, token: TokenDep) -> User:
+async def get_current_user(session: SessionDep, token: TokenDep) -> User:
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
         )
         token_data = TokenPayload(**payload)
-    except (InvalidTokenError, ValidationError):
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    user = session.get(User, token_data.sub)
+    user = await user_repo.get_user_by_id(session=session, user_id=uuid.UUID(token_data.sub))
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if not user.is_active:
@@ -49,7 +58,7 @@ def get_current_user(session: SessionDep, token: TokenDep) -> User:
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-def get_current_active_superuser(current_user: CurrentUser) -> User:
+async def get_current_active_superuser(current_user: CurrentUser) -> User:
     if not current_user.is_superuser:
         raise HTTPException(
             status_code=403, detail="The user doesn't have enough privileges"
