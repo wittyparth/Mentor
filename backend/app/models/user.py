@@ -27,6 +27,15 @@ class User(Base):
     items: Mapped[list["Item"]] = relationship(
         back_populates="owner", cascade="all, delete-orphan"
     )
+    projects: Mapped[list["Project"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    ai_configs: Mapped[list["AIProviderConfig"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    jira_tokens: Mapped[list["JiraToken"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Item(Base):
