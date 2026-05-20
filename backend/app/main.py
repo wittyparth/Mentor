@@ -13,6 +13,8 @@ from app.core.database import async_engine
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     yield
+    from app.core.redis import close_redis_pool
+    await close_redis_pool()
     await async_engine.dispose()
 
 

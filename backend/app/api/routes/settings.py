@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.deps import CurrentUser, SessionDep, RedisDep
+from app.api.deps import CurrentUser, SessionDep
 from app.schemas.settings import AIProviderConfigCreate, AIProviderConfigPublic
 from app.services.settings_service import get_provider_config, save_provider_config, delete_provider_config
 

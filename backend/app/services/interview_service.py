@@ -3,7 +3,6 @@ import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ai.client import get_default_ai_client, get_ai_client
-from app.models.project import Project
 from app.repositories import project_repo
 from app.schemas.project import ClarificationInput, ClarificationOutput
 

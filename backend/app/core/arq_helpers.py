@@ -1,5 +1,4 @@
-from arq.connections import RedisSettings, _pool_from_url
-from arq.jobs import JobStatus
+from arq.connections import _pool_from_url
 
 from app.core.config import settings
 
