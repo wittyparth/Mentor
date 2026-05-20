@@ -92,6 +92,13 @@ async def push_to_jira(
         session=session,
         project_id=project_id,
         job_type="linear_push",
+        arq_job_id=arq_job_id,
+    )
+
+    from app.core.arq_helpers import enqueue_arq_job
+    arq_job_id = await enqueue_arq_job(
+        "linear_push_task",
+        str(project_id),
     )
 
     return JiraPushResult(

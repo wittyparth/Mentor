@@ -1,24 +1,16 @@
-import asyncio
 import json
 import logging
-import uuid
 
-from arq import func
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.ai.client import get_default_ai_client, get_model_for_config
+from app.ai.client import get_default_model
 from app.ai.prompts.stack_analysis import build_stack_analysis_prompt
 from app.ai.prompts.query_generation import build_query_generation_prompt
 from app.ai.prompts.synthesis import build_synthesis_prompt
 from app.ai.prompts.scope_calibration import build_scope_calibration_prompt
 from app.ai.prompts.plan_generation import build_plan_generation_prompt
 from app.ai.output_models.stack_analysis import StackAnalysisOutput
-from app.ai.output_models.clarification import ClarificationResponse
 from app.ai.output_models.research import SearchQueryList, ResearchBriefOutput
-from app.ai.output_models.plan import FullPlan, Subtask, Story, Sprint, Epic
+from app.ai.output_models.plan import FullPlan
 from app.integrations.exa import search, format_search_results
-from app.core.config import settings
-from app.models.project import ProjectStatus
 
 logger = logging.getLogger(__name__)
 
@@ -34,9 +26,8 @@ async def run_stack_analysis(
         clarification_qa=project_context.get("clarifications", []),
         skill_level=skill_level,
     )
-    model = get_default_model(cheap=True)
     response = ai_client.chat.completions.create(
-        model=model,
+        model=get_default_model(cheap=True),
         response_model=StackAnalysisOutput,
         messages=messages,
         max_retries=2,

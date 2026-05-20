@@ -42,20 +42,30 @@ async def submit(
     current_user: CurrentUser,
     interview_data: InterviewSubmitInput,
 ) -> dict:
+    from app.services.project_service import submit_interview
+    from app.repositories.job_repo import create_job
+
     project = await submit_interview(
         session=session, user_id=current_user.id, interview_data=interview_data
     )
 
-    from app.repositories.job_repo import create_job
     job = await create_job(
         session=session,
         project_id=project.id,
         job_type="research_pipeline",
+        arq_job_id=arq_job_id,
+    )
+
+    from app.core.arq_helpers import enqueue_arq_job
+    arq_job_id = await enqueue_arq_job(
+        "research_pipeline_task",
+        str(project.id),
     )
 
     return {
         "project_id": str(project.id),
         "job_id": str(job.id),
+        "arq_job_id": arq_job_id,
         "status": project.status,
         "message": "Interview submitted. Research pipeline starting.",
     }
