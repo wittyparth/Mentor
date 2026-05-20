@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.models.base import Base
 from app.models.user import User, Item
+from app.models.project import AIProviderConfig, Project, Job, JiraToken
 from app.core.config import settings
 
 config = context.config
